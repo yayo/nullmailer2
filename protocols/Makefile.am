@@ -1,6 +1,9 @@
 libexecdir = @libexecdir@/nullmailer
 
-libexec_PROGRAMS = smtp qmqp
+libexec_PROGRAMS = smtp
+if QMQP
+libexec_PROGRAMS += qmqp
+endif
 AM_CPPFLAGS = -I$(top_srcdir)/lib
 
 if TLS
@@ -14,5 +17,7 @@ endif
 smtp_SOURCES = smtp.cc protocol.cc $(TLS_SOURCES) protocol.h
 smtp_LDADD = ../lib/cli++/libcli++.a ../lib/libnullmailer.a $(TLS_LDADD)
 
+if QMQP
 qmqp_SOURCES = qmqp.cc protocol.cc $(TLS_SOURCES) protocol.h
 qmqp_LDADD = ../lib/cli++/libcli++.a ../lib/libnullmailer.a $(TLS_LDADD)
+endif

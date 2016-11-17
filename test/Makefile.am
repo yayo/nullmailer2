@@ -1,6 +1,9 @@
 noinst_PROGRAMS = address-test argparse-test clitest0 clitest1
 EXTRA_DIST = address-trace.cc clitest.cc clitest.sh functions.in runtests \
-	accept-qmqp.sh accept-smtp.sh
+	accept-smtp.sh
+if QMQP
+EXTRA_DIST += accept-qmqp.sh
+endif
 noinst_SCRIPTS = functions
 CLEANFILES = functions
 

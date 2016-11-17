@@ -69,6 +69,15 @@ AC_SUBST(HAVE_GETADDRINFO)
 AC_DEFINE(BUFSIZE, 4096, [Generic buffer size])
 AM_CONDITIONAL(FDBUF_NO_MYSTRING, false)
 
+AC_ARG_ENABLE(qmqp,
+ [  --enable-qmqp     Enable QMQP support],
+ [case "${enableval}" in
+   yes) qmqp=true; AC_DEFINE(HAVE_QMQP, 1, [Build in support for QMQP]) ;;
+   no)  qmqp=false ;;
+   *) AC_MSG_ERROR(bad value ${enableval} for --enable-qmqp) ;;
+ esac],[qmqp=true; AC_DEFINE(HAVE_QMQP, 1, [Build in support for QMQP])])
+AM_CONDITIONAL(QMQP, $qmqp)
+
 AC_ARG_ENABLE(tls,
  [  --enable-tls      Enable SSL/TLS support],
  [case "${enableval}" in
