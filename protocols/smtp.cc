@@ -49,6 +49,7 @@ public:
   void docmd(mystring cmd, int range);
   void dohelo(bool ehlo);
   bool hascap(const char* name, const char* word = NULL);
+  void auth_xoauth2(void);
   void auth_login(void);
   void auth_plain(void);
   void send_data(fdibuf& msg);
@@ -158,6 +159,22 @@ bool smtp::hascap(const char* name, const char* word)
   return false;
 }
 
+void smtp::auth_xoauth2(void)
+{
+  mystring plain("user=");
+  plain += user;
+  plain += '\1';
+  plain += "auth=";
+  plain += token_type;
+  plain += ' ';
+  plain += access_token;
+  plain += '\1';
+  plain += '\1';
+  mystring encoded = "AUTH XOAUTH2 ";
+  base64_encode(plain, encoded);
+  docmd(encoded, 200);
+}
+
 void smtp::auth_login(void)
 {
   mystring encoded;
@@ -230,23 +247,29 @@ void protocol_send(fdibuf& in, fdibuf& netin, fdobuf& netout)
   smtp conn(netin, netout);
   if (!did_starttls)
     conn.docmd("", 200);
-
-  if (user != 0 && pass != 0) {
-    conn.dohelo(true);
-    if (auth_method == AUTH_LOGIN)
-      conn.auth_login();
-    else if (auth_method == AUTH_PLAIN)
-      conn.auth_plain();
-    else {
-      // Detect method
-      if (conn.hascap("AUTH", "PLAIN"))
-	conn.auth_plain();
-      else if (conn.hascap("AUTH", "LOGIN"))
-	conn.auth_login();
-      else
-	protocol_fail(ERR_MSG_TEMPFAIL, "Server does not advertise any supported authentication methods");
-    }
-  }
+  if(0!=user)
+   {conn.dohelo(true);
+    switch(auth_method)
+     {case AUTH_PLAIN:
+       conn.auth_plain();
+       break;
+      case AUTH_LOGIN:
+       conn.auth_login();
+       break;
+      case AUTH_XOAUTH2:
+       conn.auth_xoauth2();
+       break;
+      default:
+       if (0!=pass && conn.hascap("AUTH", "PLAIN"))
+        conn.auth_plain();
+       else if (0!=pass && conn.hascap("AUTH", "LOGIN"))
+        conn.auth_login();
+       else if (0!=token_type && 0!=access_token && conn.hascap("AUTH", "XOAUTH2"))
+        conn.auth_xoauth2();
+       else
+        protocol_fail(ERR_MSG_TEMPFAIL, "Server does not advertise any supported authentication methods");
+     }
+   }
   else
     conn.dohelo(false);
 

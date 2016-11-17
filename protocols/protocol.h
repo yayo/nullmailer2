@@ -13,8 +13,11 @@ extern void protocol_succ(const char* msg);
 #define AUTH_DETECT 0
 #define AUTH_LOGIN 1
 #define AUTH_PLAIN 2
+#define AUTH_XOAUTH2 3
 extern const char* user;
 extern const char* pass;
+extern const char* token_type;
+extern const char* access_token;
 extern int auth_method;
 extern int port;
 extern int use_tls;

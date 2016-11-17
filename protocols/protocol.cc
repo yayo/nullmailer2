@@ -31,6 +31,8 @@
 
 const char* user = 0;
 const char* pass = 0;
+const char* token_type = 0;
+const char* access_token = 0;
 int port = 0;
 int auth_method = AUTH_DETECT;
 int use_tls = 0;
@@ -50,8 +52,14 @@ cli_option cli_options[] = {
     "Set the user name for authentication", 0 },
   { 0, "pass", cli_option::string, 0, &pass,
     "Set the password for authentication", 0 },
+  { 0, "token_type", cli_option::string, 0, &token_type,
+    "Set the OAuth2 token_type for authentication", 0 },
+  { 0, "access_token", cli_option::string, 0, &access_token,
+    "Set the OAuth2 access_token for authentication", 0 },
   { 0, "auth-login", cli_option::flag, AUTH_LOGIN, &auth_method,
     "Use AUTH LOGIN instead of auto-detecting in SMTP", 0 },
+  { 0, "auth-xoauth2", cli_option::flag, AUTH_XOAUTH2, &auth_method,
+    "Use AUTH XOAUTH2 instead of auto-detecting in SMTP", 0 },
   { 0, "source", cli_option::string, 0, &source,
     "Source address for connections", 0 },
 #ifdef HAVE_TLS
@@ -138,6 +146,20 @@ int cli_main(int, char*[])
     port = use_tls ? default_tls_port : default_port;
   if (port < 0)
     protocol_fail(ERR_USAGE, "Invalid value for port");
+  if(0!=user)
+   {if(AUTH_PLAIN==auth_method||AUTH_LOGIN==auth_method)
+     {if(0==pass)
+       protocol_fail(ERR_USAGE, "pass not set");
+     }
+    else if(AUTH_XOAUTH2==auth_method)
+     {if(0==token_type||0==access_token)
+       protocol_fail(ERR_USAGE, "token_type or access_token not set");
+     }
+    else
+     {if(0==pass&&(0==token_type||0==access_token))
+       protocol_fail(ERR_USAGE, "Authentication credentials not set");
+     }
+   }
   if (use_tls || use_starttls)
     tls_init(remote);
   fdibuf in(3, true);
